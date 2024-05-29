@@ -1,6 +1,6 @@
 <template>
   <div class="products-carousel">
-    <div class="card-container">
+    <div ref="listRef" id="listContainer" class="card-container">
       <div v-for="i in 10">
         <n-card :key="i" title="Card with Cover">
           <template #cover>
@@ -12,10 +12,10 @@
         </n-card>
       </div>
     </div>
-    <button type="button" class="custom-arrow--left" @click="prev">
+    <button type="button" class="custom-arrow--left" @click="scrollLeft">
       <n-icon><ArrowBack /></n-icon>
     </button>
-    <button type="button" class="custom-arrow--right" @click="next">
+    <button type="button" class="custom-arrow--right" @click="scrollRight">
       <n-icon><ArrowForward /></n-icon>
     </button>
   </div>
@@ -24,6 +24,10 @@
 <script setup>
 import { NCard, NIcon } from "naive-ui";
 import { ArrowBack, ArrowForward } from "@vicons/ionicons5";
+
+function scrollLeft() {}
+
+function scrollRight() {}
 </script>
 
 <style scoped>
