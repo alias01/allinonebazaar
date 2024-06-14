@@ -128,8 +128,8 @@ const newUserRules = {
       asyncValidator: (rule, value) => {
         return new Promise(async (resolve, reject) => {
           await userStore.checkUserAvailability(value);
-          if (userStore.usernameMsgObj?.error) {
-            reject(userStore.usernameMsgObj.message);
+          if (userStore.usernameAvailabilityMsg?.error) {
+            reject(userStore.usernameAvailabilityMsg.message);
           } else {
             resolve();
           }
@@ -172,15 +172,6 @@ const oldUserRules = {
     {
       required: true,
       trigger: "blur",
-      validator: (rule, value) => {
-        return new Promise((resolve, reject) => {
-          if (value !== "testName") {
-            reject(Error("Username is invalid"));
-          } else {
-            resolve();
-          }
-        });
-      },
     },
   ],
   password: [
@@ -231,13 +222,17 @@ function validatePasswordSame(rule, value) {
 
 function signIn(e) {
   e.preventDefault();
-  userStore.checkUserAvailability();
   const messageReactive = message.loading("Verifying", {
     duration: 0,
   });
-  newUserformRef.value?.validate((errors) => {
+  oldUserformRef.value?.validate(async (errors) => {
     if (!errors) {
-      message.success("Valid");
+      let isUserExist = await userStore.loginUser(oldUserformValue.value);
+      if (isUserExist) {
+        showModal.value = false;
+      } else {
+        message.error("Oops something went wrong!");
+      }
     } else {
       message.error("Invalid");
       console.log("errors", errors);
@@ -253,10 +248,14 @@ function signUp(e) {
     duration: 0,
   });
 
-  newUserformRef.value?.validate((errors) => {
+  newUserformRef.value?.validate(async (errors) => {
     if (!errors) {
-      console.log(newUserformValue.value);
-      userStore.newUserSignup(newUserformValue.value);
+      await userStore.newUserSignup(newUserformValue.value);
+      if (userStore.signUpUserObj.error) {
+        message.error(`${userStore.signUpUserObj.msg}`);
+      } else {
+        isNewUser.value = false;
+      }
     } else {
       message.error("Invalid");
       console.log("errors", errors);
@@ -267,7 +266,7 @@ function signUp(e) {
 
 function handleNewUserClick(e) {
   e.preventDefault();
-  isNewUser.value = !isNewUser.value;
+  isNewUser.value = true;
 }
 </script>
 

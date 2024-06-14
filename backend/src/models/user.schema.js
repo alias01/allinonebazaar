@@ -1,16 +1,7 @@
 const Joi = require("joi");
 
 const loginSchema = Joi.object({
-  username: Joi.string().when(Joi.ref("$email"), {
-    is: Joi.exist(),
-    then: Joi.forbidden(),
-    otherwise: Joi.string().required(),
-  }),
-  email: Joi.string().email().when(Joi.ref("$username"), {
-    is: Joi.exist(),
-    then: Joi.forbidden(),
-    otherwise: Joi.required(),
-  }),
+  username: Joi.string().alphanum().min(3).max(30).required(),
   password: Joi.string(),
 });
 

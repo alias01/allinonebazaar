@@ -12,13 +12,13 @@ const userModel = {
 
   registerUser: async (username, password) => {
     let sql = `INSERT INTO users (username, password)
-    VALUES ($1, $3) RETURNING user_id`;
+    VALUES ($1, $2) RETURNING user_id`;
 
     const dbClient = await __dbpool.connect();
 
     try {
       dbClient.query("BEGIN");
-      const res = dbClient.query(sql, [username, email, password]);
+      const res = dbClient.query(sql, [username, password]);
       return res;
     } catch {
       dbClient.query("ROLLBACK");
