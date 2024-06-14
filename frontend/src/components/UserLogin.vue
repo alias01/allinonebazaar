@@ -16,21 +16,21 @@
       </div>
       <div class="right-side">
         <n-form
-          ref="formRef"
+          ref="newUserformRef"
           v-if="isNewUser"
           :label-width="80"
-          :model="formValue"
-          :rules="rules"
+          :model="newUserformValue"
+          :rules="newUserRules"
         >
           <n-form-item label="Username" path="username">
             <n-input
-              v-model:value="formValue.username"
+              v-model:value="newUserformValue.username"
               placeholder="Enter Username"
             />
           </n-form-item>
           <n-form-item path="password" label="Password">
             <n-input
-              v-model:value="formValue.password"
+              v-model:value="newUserformValue.password"
               type="password"
               @input="handlePasswordInput"
               @keydown.enter.prevent
@@ -39,12 +39,12 @@
           <n-form-item
             ref="rPasswordFormItemRef"
             first
-            path="reenteredPassword"
+            path="repeatPassword"
             label="Re-enter Password"
           >
             <n-input
-              v-model:value="formValue.reenteredPassword"
-              :disabled="!formValue.password"
+              v-model:value="newUserformValue.repeatPassword"
+              :disabled="!newUserformValue.password"
               type="password"
               @keydown.enter.prevent
             />
@@ -53,28 +53,26 @@
             By continuing, you agree to allinonebazaar's Terms of Use and
             Privacy Policy.
           </p>
-          <n-form-item v-model:value="formValue.phone">
-            <n-button @click="handleValidateClick" type="info">
-              Sign Up
-            </n-button>
+          <n-form-item v-model:value="newUserformValue.phone">
+            <n-button @click="signUp" type="info"> Sign Up </n-button>
           </n-form-item>
         </n-form>
         <n-form
-          ref="formRef"
+          ref="oldUserformRef"
           v-else
           :label-width="80"
-          :model="formValue"
-          :rules="rules"
+          :model="oldUserformValue"
+          :rules="oldUserRules"
         >
           <n-form-item label="Username" path="username">
             <n-input
-              v-model:value="formValue.username"
+              v-model:value="oldUserformValue.username"
               placeholder="Enter Username"
             />
           </n-form-item>
           <n-form-item path="password" label="Password">
             <n-input
-              v-model:value="formValue.password"
+              v-model:value="oldUserformValue.password"
               type="password"
               @input="handlePasswordInput"
               @keydown.enter.prevent
@@ -84,10 +82,8 @@
             By continuing, you agree to allinonebazaar's Terms of Use and
             Privacy Policy.
           </p>
-          <n-form-item v-model:value="formValue.phone">
-            <n-button @click="handleValidateClick" type="info">
-              Sign In
-            </n-button>
+          <n-form-item v-model:value="oldUserformValue.phone">
+            <n-button @click="signIn" type="info"> Sign In </n-button>
           </n-form-item>
         </n-form>
         <p
@@ -112,39 +108,42 @@ import {
   useMessage,
 } from "naive-ui";
 import { ref } from "vue";
+import { useUserStore } from "../../stores/user";
 
+const message = useMessage();
 const showModal = ref(true);
 const isNewUser = ref(false);
-const formRef = ref(null);
-// const message = useMessage();
-const formValue = ref({
+
+const newUserformRef = ref(null);
+const newUserformValue = ref({
   username: null,
   password: null,
-  reenteredPassword: null,
+  repeatPassword: null,
 });
-
-const rules = {
-  username: {
-    required: true,
-    trigger: "blur",
-    validator: (rule, value) => {
-      return new Promise((resolve, reject) => {
-        if (value !== "testName") {
-          reject(Error("error name"));
-        } else {
-          resolve();
-        }
-      });
+const newUserRules = {
+  username: [
+    {
+      required: true,
+      trigger: "blur",
+      asyncValidator: (rule, value) => {
+        return new Promise(async (resolve, reject) => {
+          await userStore.checkUserAvailability(value);
+          if (userStore.usernameMsgObj?.error) {
+            reject(userStore.usernameMsgObj.message);
+          } else {
+            resolve();
+          }
+        });
+      },
     },
-  },
-
+  ],
   password: [
     {
       required: true,
       message: "Password is required",
     },
   ],
-  reenteredPassword: [
+  repeatPassword: [
     {
       required: true,
       message: "Re-entered password is required",
@@ -163,32 +162,101 @@ const rules = {
   ],
 };
 
+const oldUserformRef = ref(null);
+const oldUserformValue = ref({
+  username: null,
+  password: null,
+});
+const oldUserRules = {
+  username: [
+    {
+      required: true,
+      trigger: "blur",
+      validator: (rule, value) => {
+        return new Promise((resolve, reject) => {
+          if (value !== "testName") {
+            reject(Error("Username is invalid"));
+          } else {
+            resolve();
+          }
+        });
+      },
+    },
+  ],
+  password: [
+    {
+      required: true,
+      message: "Password is required",
+    },
+  ],
+  repeatPassword: [
+    {
+      required: true,
+      message: "Re-entered password is required",
+      trigger: ["input", "blur"],
+    },
+    {
+      validator: validatePasswordStartWith,
+      message: "Password is not same as re-entered password!",
+      trigger: "input",
+    },
+    {
+      validator: validatePasswordSame,
+      message: "Password is not same as re-entered password!",
+      trigger: ["blur", "password-input"],
+    },
+  ],
+};
+
+const userStore = useUserStore();
+
 function handlePasswordInput() {
-  if (modelRef.value.reenteredPassword) {
+  // handle re-entered password input
+  if (newUserformValue.value.repeatPassword) {
     rPasswordFormItemRef.value?.validate({ trigger: "password-input" });
   }
 }
 
 function validatePasswordStartWith(rule, value) {
   return (
-    !!formValue.value.password &&
-    formValue.value.password.startsWith(value) &&
-    formValue.value.password.length >= value.length
+    !!newUserformValue.value.password &&
+    newUserformValue.value.password.startsWith(value) &&
+    newUserformValue.value.password.length >= value.length
   );
 }
 
 function validatePasswordSame(rule, value) {
-  return value === formValue.value.password;
+  return value === newUserformValue.value.password;
 }
 
-function handleValidateClick(e) {
+function signIn(e) {
   e.preventDefault();
+  userStore.checkUserAvailability();
   const messageReactive = message.loading("Verifying", {
     duration: 0,
   });
-  formRef.value?.validate((errors) => {
+  newUserformRef.value?.validate((errors) => {
     if (!errors) {
       message.success("Valid");
+    } else {
+      message.error("Invalid");
+      console.log("errors", errors);
+    }
+    messageReactive.destroy();
+  });
+}
+
+function signUp(e) {
+  e.preventDefault();
+
+  const messageReactive = message.loading("Verifying", {
+    duration: 0,
+  });
+
+  newUserformRef.value?.validate((errors) => {
+    if (!errors) {
+      console.log(newUserformValue.value);
+      userStore.newUserSignup(newUserformValue.value);
     } else {
       message.error("Invalid");
       console.log("errors", errors);

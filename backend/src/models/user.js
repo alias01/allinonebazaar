@@ -1,18 +1,18 @@
 const userModel = {
-  getUser: async (username = "", email = "") => {
-    let sql = `SELECT * FROM users where username = $1 or email = $2`;
+  getUser: async (username = "") => {
+    let sql = `SELECT * FROM users where username ilike $1`;
 
     try {
-      const res = __dbpool.query(sql, [username, email]);
+      const res = __dbpool.query(sql, [username]);
       return res;
     } catch {
       throw err;
     }
   },
 
-  registerUser: async (username, email, password) => {
-    let sql = `INSERT INTO users (username, email, password)
-    VALUES ($1, $2, $3) RETURNING user_id`;
+  registerUser: async (username, password) => {
+    let sql = `INSERT INTO users (username, password)
+    VALUES ($1, $3) RETURNING user_id`;
 
     const dbClient = await __dbpool.connect();
 
