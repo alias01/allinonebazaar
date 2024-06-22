@@ -1,136 +1,142 @@
 <template>
-  <div class="login-container">
-    <div class="left-side">
-      <div class="content" v-if="isNewUser">
-        <h1>Looks like you're new here!</h1>
-        <p>Sign up with your mobile number to get started</p>
+  <n-modal v-model:show="showModal">
+    <div class="login-container">
+      <div class="left-side">
+        <div class="content" v-if="isNewUser">
+          <h1>Looks like you're new here!</h1>
+          <p>Sign up with your mobile number to get started</p>
+        </div>
+        <div class="content" v-else>
+          <h1>Login</h1>
+          <p>Get access to your Orders, Wishlist and Recommendations</p>
+        </div>
+        <div class="image-container">
+          <img src="../assets/login_cart.png" alt="cart" />
+        </div>
       </div>
-      <div class="content" v-else>
-        <h1>Login</h1>
-        <p>Get access to your Orders, Wishlist and Recommendations</p>
-      </div>
-      <div class="image-container">
-        <img src="../assets/login_cart.png" alt="cart" />
-      </div>
-    </div>
-    <div class="right-side">
-      <n-form
-        ref="formRef"
-        v-if="isNewUser"
-        :label-width="80"
-        :model="formValue"
-        :rules="rules"
-      >
-        <n-form-item label="Username" path="username">
-          <n-input
-            v-model:value="formValue.username"
-            placeholder="Enter Username"
-          />
-        </n-form-item>
-        <n-form-item path="password" label="Password">
-          <n-input
-            v-model:value="formValue.password"
-            type="password"
-            @input="handlePasswordInput"
-            @keydown.enter.prevent
-          />
-        </n-form-item>
-        <n-form-item
-          ref="rPasswordFormItemRef"
-          first
-          path="reenteredPassword"
-          label="Re-enter Password"
+      <div class="right-side">
+        <n-form
+          ref="newUserformRef"
+          v-if="isNewUser"
+          :label-width="80"
+          :model="newUserformValue"
+          :rules="newUserRules"
         >
-          <n-input
-            v-model:value="formValue.reenteredPassword"
-            :disabled="!formValue.password"
-            type="password"
-            @keydown.enter.prevent
-          />
-        </n-form-item>
-        <p class="form-clause">
-          By continuing, you agree to allinonebazaar's Terms of Use and Privacy
-          Policy.
+          <n-form-item label="Username" path="username">
+            <n-input
+              v-model:value="newUserformValue.username"
+              placeholder="Enter Username"
+            />
+          </n-form-item>
+          <n-form-item path="password" label="Password">
+            <n-input
+              v-model:value="newUserformValue.password"
+              type="password"
+              @input="handlePasswordInput"
+              @keydown.enter.prevent
+            />
+          </n-form-item>
+          <n-form-item
+            ref="rPasswordFormItemRef"
+            first
+            path="repeatPassword"
+            label="Re-enter Password"
+          >
+            <n-input
+              v-model:value="newUserformValue.repeatPassword"
+              :disabled="!newUserformValue.password"
+              type="password"
+              @keydown.enter.prevent
+            />
+          </n-form-item>
+          <p class="form-clause">
+            By continuing, you agree to allinonebazaar's Terms of Use and
+            Privacy Policy.
+          </p>
+          <n-form-item v-model:value="newUserformValue.phone">
+            <n-button @click="signUp" type="info"> Sign Up </n-button>
+          </n-form-item>
+        </n-form>
+        <n-form
+          ref="oldUserformRef"
+          v-else
+          :label-width="80"
+          :model="oldUserformValue"
+          :rules="oldUserRules"
+        >
+          <n-form-item label="Username" path="username">
+            <n-input
+              v-model:value="oldUserformValue.username"
+              placeholder="Enter Username"
+            />
+          </n-form-item>
+          <n-form-item path="password" label="Password">
+            <n-input
+              v-model:value="oldUserformValue.password"
+              type="password"
+              @input="handlePasswordInput"
+              @keydown.enter.prevent
+            />
+          </n-form-item>
+          <p class="form-clause">
+            By continuing, you agree to allinonebazaar's Terms of Use and
+            Privacy Policy.
+          </p>
+          <n-form-item v-model:value="oldUserformValue.phone">
+            <n-button @click="signIn" type="info"> Sign In </n-button>
+          </n-form-item>
+        </n-form>
+        <p
+          v-if="!isNewUser"
+          class="form-footer-link"
+          @click="handleNewUserClick"
+        >
+          New to allinonebazaar? Create an account
         </p>
-        <n-form-item v-model:value="formValue.phone">
-          <n-button @click="handleValidateClick" type="info">
-            Sign Up
-          </n-button>
-        </n-form-item>
-      </n-form>
-      <n-form
-        ref="formRef"
-        v-else
-        :label-width="80"
-        :model="formValue"
-        :rules="rules"
-      >
-        <n-form-item label="Username" path="username">
-          <n-input
-            v-model:value="formValue.username"
-            placeholder="Enter Username"
-          />
-        </n-form-item>
-        <n-form-item path="password" label="Password">
-          <n-input
-            v-model:value="formValue.password"
-            type="password"
-            @input="handlePasswordInput"
-            @keydown.enter.prevent
-          />
-        </n-form-item>
-        <p class="form-clause">
-          By continuing, you agree to allinonebazaar's Terms of Use and Privacy
-          Policy.
-        </p>
-        <n-form-item v-model:value="formValue.phone">
-          <n-button @click="handleValidateClick" type="info">
-            Sign In
-          </n-button>
-        </n-form-item>
-      </n-form>
-      <p v-if="!isNewUser" class="form-footer-link" @click="handleNewUserClick">
-        New to allinonebazaar? Create an account
-      </p>
+      </div>
     </div>
-  </div>
+  </n-modal>
 </template>
 
 <script setup>
-import { NForm, NFormItem, NButton, NInput, useMessage } from "naive-ui";
+import { useMessage } from "naive-ui";
 import { ref } from "vue";
+import { useUserStore } from "../../stores/user";
 
+const message = useMessage();
+const showModal = ref(false);
 const isNewUser = ref(false);
-const formRef = ref(null);
-// const message = useMessage();
-const formValue = ref({
+
+const newUserformRef = ref(null);
+const newUserformValue = ref({
   username: null,
   password: null,
-  reenteredPassword: null,
+  repeatPassword: null,
 });
-
-const rules = {
-  username: {
-    required: true,
-    trigger: "blur",
-    validator: (rule, value) => {
-      return new Promise((resolve, reject) => {
-        if (value !== "testName") {
-          reject(Error("error name"));
-        } else {
-          resolve();
-        }
-      });
+const newUserRules = {
+  username: [
+    {
+      required: true,
+      trigger: "blur",
+      asyncValidator: (rule, value) => {
+        return new Promise(async (resolve, reject) => {
+          await userStore.checkUserAvailability(value);
+          if (userStore.usernameAvailabilityMsg?.error) {
+            reject(userStore.usernameAvailabilityMsg.message);
+          } else {
+            resolve();
+          }
+        });
+      },
     },
-  },
-
+  ],
   password: [
     {
       required: true,
       message: "Password is required",
     },
   ],
-  reenteredPassword: [
+  repeatPassword: [
     {
       required: true,
       message: "Re-entered password is required",
@@ -149,25 +155,100 @@ const rules = {
   ],
 };
 
-function validatePasswordStartWith(rule, value) {
-  return (
-    !!formValue.value.password &&
-    formValue.value.password.startsWith(value) &&
-    formValue.value.password.length >= value.length
-  );
-}
-function validatePasswordSame(rule, value) {
-  return value === formValue.value.password;
+const oldUserformRef = ref(null);
+const oldUserformValue = ref({
+  username: null,
+  password: null,
+});
+const oldUserRules = {
+  username: [
+    {
+      required: true,
+      trigger: "blur",
+    },
+  ],
+  password: [
+    {
+      required: true,
+      message: "Password is required",
+    },
+  ],
+  repeatPassword: [
+    {
+      required: true,
+      message: "Re-entered password is required",
+      trigger: ["input", "blur"],
+    },
+    {
+      validator: validatePasswordStartWith,
+      message: "Password is not same as re-entered password!",
+      trigger: "input",
+    },
+    {
+      validator: validatePasswordSame,
+      message: "Password is not same as re-entered password!",
+      trigger: ["blur", "password-input"],
+    },
+  ],
+};
+
+const userStore = useUserStore();
+
+function handlePasswordInput() {
+  // handle re-entered password input
+  if (newUserformValue.value.repeatPassword) {
+    rPasswordFormItemRef.value?.validate({ trigger: "password-input" });
+  }
 }
 
-function handleValidateClick(e) {
+function validatePasswordStartWith(rule, value) {
+  return (
+    !!newUserformValue.value.password &&
+    newUserformValue.value.password.startsWith(value) &&
+    newUserformValue.value.password.length >= value.length
+  );
+}
+
+function validatePasswordSame(rule, value) {
+  return value === newUserformValue.value.password;
+}
+
+function signIn(e) {
   e.preventDefault();
   const messageReactive = message.loading("Verifying", {
     duration: 0,
   });
-  formRef.value?.validate((errors) => {
+  oldUserformRef.value?.validate(async (errors) => {
     if (!errors) {
-      message.success("Valid");
+      let isUserExist = await userStore.loginUser(oldUserformValue.value);
+      if (isUserExist) {
+        showModal.value = false;
+      } else {
+        message.error("Oops something went wrong!");
+      }
+    } else {
+      message.error("Invalid");
+      console.log("errors", errors);
+    }
+    messageReactive.destroy();
+  });
+}
+
+function signUp(e) {
+  e.preventDefault();
+
+  const messageReactive = message.loading("Verifying", {
+    duration: 0,
+  });
+
+  newUserformRef.value?.validate(async (errors) => {
+    if (!errors) {
+      await userStore.newUserSignup(newUserformValue.value);
+      if (userStore.signUpUserObj.error) {
+        message.error(`${userStore.signUpUserObj.msg}`);
+      } else {
+        isNewUser.value = false;
+      }
     } else {
       message.error("Invalid");
       console.log("errors", errors);
@@ -178,7 +259,7 @@ function handleValidateClick(e) {
 
 function handleNewUserClick(e) {
   e.preventDefault();
-  isNewUser.value = !isNewUser.value;
+  isNewUser.value = true;
 }
 </script>
 
@@ -192,6 +273,7 @@ function handleNewUserClick(e) {
   max-width: 750px;
   min-width: 650px;
   justify-content: space-between;
+  background-color: white;
 
   .left-side {
     display: flex;
@@ -209,6 +291,10 @@ function handleNewUserClick(e) {
         font-size: 28px;
         font-weight: 500;
       }
+    }
+
+    .image-container {
+      text-align: center;
     }
   }
 
@@ -231,6 +317,7 @@ function handleNewUserClick(e) {
       color: #2874f0;
       font-weight: 500;
       cursor: pointer;
+      text-align: center;
     }
   }
 }
