@@ -99,19 +99,12 @@
 </template>
 
 <script setup>
-import {
-  NModal,
-  NForm,
-  NFormItem,
-  NButton,
-  NInput,
-  useMessage,
-} from "naive-ui";
+import { useMessage } from "naive-ui";
 import { ref } from "vue";
 import { useUserStore } from "../../stores/user";
 
 const message = useMessage();
-const showModal = ref(true);
+const showModal = ref(false);
 const isNewUser = ref(false);
 
 const newUserformRef = ref(null);
